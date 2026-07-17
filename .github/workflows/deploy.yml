@@ -15,18 +15,18 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /home/ubuntu/projeto-palworld
+            cd /home/ubuntu/palword
             git pull origin main
 
             # Next.js (pasta site) — pm2 "paldeck-next" na porta 3001
-            cd /home/ubuntu/projeto-palworld/site
+            cd /home/ubuntu/palword/site
             npm install
             npm run build
             pm2 restart paldeck-next || PORT=3001 pm2 start npm --name "paldeck-next" -- start
 
             # Django (pasta api) — gunicorn via systemd na porta 8001
-            cd /home/ubuntu/projeto-palworld/api
-            source /home/ubuntu/projeto-palworld/venv/bin/activate
+            cd /home/ubuntu/palword/api
+            source /home/ubuntu/palword/venv/bin/activate
             pip install -r requirements.txt
             python manage.py migrate --noinput
             python manage.py collectstatic --noinput

@@ -7,8 +7,8 @@ PalDeck usa portas separadas para não colidir: **8001** (gunicorn) e **3001** (
 
 ```bash
 cd /home/ubuntu
-git clone <url-do-repo> projeto-palworld
-cd projeto-palworld
+git clone https://github.com/EndrioAlberton/palword.git
+cd palword
 
 python3 -m venv venv
 source venv/bin/activate

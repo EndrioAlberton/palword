@@ -5,9 +5,9 @@ After=network.target
 [Service]
 Type=simple
 User=ubuntu
-WorkingDirectory=/home/ubuntu/projeto-palworld/api
-EnvironmentFile=/home/ubuntu/projeto-palworld/api/.env
-ExecStart=/home/ubuntu/projeto-palworld/venv/bin/gunicorn core.wsgi:application --bind 127.0.0.1:8001 --workers 3
+WorkingDirectory=/home/ubuntu/palword/api
+EnvironmentFile=/home/ubuntu/palword/api/.env
+ExecStart=/home/ubuntu/palword/venv/bin/gunicorn core.wsgi:application --bind 127.0.0.1:8001 --workers 3
 Restart=on-failure
 
 [Install]
