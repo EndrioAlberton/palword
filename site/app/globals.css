@@ -1,0 +1,300 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  /* tema escuro (noite na ilha) — padrão */
+  --bg: #0e1726;
+  --bg2: #14203a;
+  --card: #1a2942;
+  --card2: #223354;
+  --border: #2d4166;
+  --txt: #e8eefb;
+  --mut: #8ba0c4;
+  --sphere: #3aa0ff;      /* azul da Pal Sphere */
+  --sphere-dark: #1f6fd0;
+  --cream: #f3e9d2;       /* parte de baixo da esfera */
+  --band: #2b2b33;        /* faixa central da esfera */
+  --ok: #6cbf4a;
+
+  /* cores dos elementos */
+  --t-neutral: #9aa3b2;
+  --t-fire: #e5623b;
+  --t-water: #4a90d9;
+  --t-grass: #6cbf4a;
+  --t-electric: #f2c94c;
+  --t-ice: #7fd6e8;
+  --t-ground: #b98a4e;
+  --t-dark: #8e5cc7;
+  --t-dragon: #c75c9e;
+}
+
+[data-theme='day'] {
+  /* tema claro (dia na ilha) */
+  --bg: #cfe6f5;
+  --bg2: #e4f1fa;
+  --card: #ffffff;
+  --card2: #f2f7fc;
+  --border: #b8d4e8;
+  --txt: #1d2c42;
+  --mut: #5a7391;
+  --band: #d8d8dd;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+  min-height: 100vh;
+  color: var(--txt);
+}
+
+.wrap { max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; }
+
+/* header */
+header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.logo { display: flex; align-items: center; gap: 10px; font-size: 24px; }
+.logo b { font-weight: 800; letter-spacing: -0.5px; }
+.logo .x { color: var(--sphere); }
+.badge-lab {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+  background: var(--card2); border: 1px solid var(--border);
+  padding: 3px 8px; border-radius: 999px; color: var(--mut);
+}
+.theme-toggle {
+  background: var(--card); border: 2px solid var(--border); color: var(--txt);
+  width: 38px; height: 38px; border-radius: 50%; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.theme-toggle:hover { border-color: var(--sphere); }
+
+/* mini esfera do logo */
+.sphere-icon {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: linear-gradient(180deg, var(--sphere) 46%, var(--band) 46% 56%, var(--cream) 56%);
+  border: 2px solid var(--band); position: relative;
+}
+.sphere-icon::after {
+  content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 8px; height: 8px; border-radius: 50%; background: var(--cream); border: 2px solid var(--band);
+}
+
+/* barra de progresso do paldeck */
+.progress-card {
+  background: var(--card); border: 2px solid var(--border); border-radius: 16px;
+  padding: 14px 18px; margin-bottom: 20px;
+}
+.progress-card .row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; }
+.progress-bar { height: 10px; background: var(--bg); border-radius: 999px; overflow: hidden; }
+.progress-bar > div { height: 100%; background: linear-gradient(90deg, var(--sphere-dark), var(--sphere)); border-radius: 999px; }
+
+/* filtros */
+.filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 22px; }
+.filters input[type='text'] {
+  background: var(--card); border: 2px solid var(--border); color: var(--txt);
+  padding: 9px 14px; border-radius: 999px; font-size: 14px; min-width: 220px; outline: none;
+}
+.filters input[type='text']:focus { border-color: var(--sphere); }
+.tbadge {
+  border: 2px solid var(--border); background: var(--card); color: var(--txt);
+  padding: 5px 12px; border-radius: 999px; font-size: 12px; cursor: pointer; text-transform: capitalize;
+}
+.tbadge.on { border-color: var(--tcolor); background: var(--tcolor); color: #fff; }
+.check-nao-descobertos { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--mut); cursor: pointer; margin-left: auto; }
+
+/* dropdown multi-select (tipo / trabalho) */
+.fdrop { position: relative; }
+.fdrop-btn {
+  display: flex; align-items: center; gap: 6px;
+  border: 2px solid var(--border); background: var(--card); color: var(--txt);
+  padding: 8px 14px; border-radius: 999px; font-size: 13px; cursor: pointer;
+}
+.fdrop-btn.on { border-color: var(--sphere); color: var(--sphere); }
+.fdrop-panel {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 20;
+  background: var(--card); border: 2px solid var(--border); border-radius: 14px;
+  padding: 10px; min-width: 190px; max-height: 260px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 2px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+}
+.fdrop-item {
+  display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 8px;
+  font-size: 13px; text-transform: capitalize; cursor: pointer; color: var(--txt);
+}
+.fdrop-item:hover { background: var(--card2); }
+.fdrop-item input { accent-color: var(--sphere); }
+.fdrop-empty { font-size: 12px; color: var(--mut); padding: 6px 8px; }
+.fdrop-clear {
+  margin-top: 4px; border: none; background: none; color: var(--mut);
+  font-size: 12px; text-align: left; cursor: pointer; padding: 6px 8px;
+}
+.fdrop-clear:hover { color: var(--sphere); }
+
+/* filtro de nível (range) */
+.nivel-range {
+  display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--txt);
+  border: 2px solid var(--border); background: var(--card); padding: 7px 14px; border-radius: 999px;
+}
+.nivel-range b { color: var(--sphere); min-width: 14px; text-align: center; }
+.nivel-range input[type='range'] { accent-color: var(--sphere); width: 90px; cursor: pointer; }
+.nivel-range.off { opacity: 0.5; }
+.nivel-range.off input[type='range'] { cursor: not-allowed; }
+
+/* grade de esferas */
+.deck {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 18px;
+}
+.pal-card { text-align: center; text-decoration: none; color: var(--txt); }
+.pal-sphere {
+  width: 104px; height: 104px; margin: 0 auto; border-radius: 50%;
+  background: linear-gradient(180deg, var(--sphere) 47%, var(--band) 47% 55%, var(--cream) 55%);
+  border: 3px solid var(--band);
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.15s ease;
+  position: relative;
+}
+a.pal-card:hover .pal-sphere { transform: scale(1.08) rotate(-4deg); }
+.pal-sphere img {
+  width: 84px; height: 84px; border-radius: 50%; object-fit: cover;
+  background: var(--card); border: 2px solid var(--band);
+}
+.pal-sphere .num {
+  position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+  font-size: 10px; font-weight: 700; background: var(--band); color: #fff;
+  padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border);
+}
+.pal-card .nome { margin-top: 12px; font-size: 13px; font-weight: 600; }
+.pal-card .tipos { margin-top: 4px; display: flex; gap: 4px; justify-content: center; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+/* não descoberto: silhueta */
+.pal-card.oculto .pal-sphere { filter: saturate(0.15) brightness(0.75); }
+.pal-card.oculto img { filter: brightness(0) opacity(0.75); }
+.pal-card.oculto .nome { color: var(--mut); }
+
+.empty { grid-column: 1 / -1; text-align: center; color: var(--mut); padding: 40px 0; font-size: 14px; }
+
+/* página de detalhe */
+.back { color: var(--mut); text-decoration: none; font-size: 13px; }
+.back:hover { color: var(--sphere); }
+.pal-hero {
+  display: flex; gap: 24px; align-items: center; flex-wrap: wrap;
+  background: var(--card); border: 2px solid var(--border); border-radius: 20px;
+  padding: 24px; margin: 16px 0 24px;
+}
+.pal-hero .pal-sphere { width: 150px; height: 150px; }
+.pal-hero .pal-sphere img { width: 122px; height: 122px; }
+.pal-hero h1 { font-size: 30px; }
+.pal-hero .key { color: var(--mut); font-size: 15px; font-weight: 600; }
+.pal-hero .desc { margin-top: 10px; color: var(--mut); font-size: 14px; line-height: 1.6; max-width: 560px; white-space: pre-line; }
+.type-pill {
+  display: inline-block; padding: 4px 14px; border-radius: 999px; font-size: 12px;
+  font-weight: 700; color: #fff; text-transform: capitalize; background: var(--tcolor, var(--t-neutral));
+  margin-right: 6px;
+}
+
+.section { background: var(--card); border: 2px solid var(--border); border-radius: 20px; padding: 20px 24px; margin-bottom: 20px; }
+.section h2 { font-size: 16px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+
+/* stats */
+.stat-row { display: grid; grid-template-columns: 110px 1fr 44px; gap: 10px; align-items: center; font-size: 13px; margin-bottom: 8px; }
+.stat-bar { height: 8px; background: var(--bg); border-radius: 999px; overflow: hidden; }
+.stat-bar > div { height: 100%; border-radius: 999px; background: var(--sphere); }
+.stat-row .val { text-align: right; font-weight: 700; }
+
+/* chips (trabalhos, drops) */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  background: var(--card2); border: 1px solid var(--border); border-radius: 999px;
+  padding: 5px 12px; font-size: 12px; text-transform: capitalize;
+}
+.chip b { color: var(--sphere); }
+
+/* breeding */
+.breed-row {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  background: var(--card2); border: 1px solid var(--border); border-radius: 14px;
+  padding: 10px 14px; margin-bottom: 10px;
+}
+.breed-pal { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--txt); font-size: 13px; font-weight: 600; }
+.breed-pal img { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--band); background: var(--card); object-fit: cover; }
+.breed-pal:hover { color: var(--sphere); }
+.breed-op { font-size: 18px; font-weight: 800; color: var(--mut); }
+
+/* skills */
+.skill { border-left: 3px solid var(--tcolor, var(--t-neutral)); padding: 6px 12px; margin-bottom: 8px; }
+.skill .top { display: flex; gap: 10px; align-items: baseline; font-size: 13px; flex-wrap: wrap; }
+.skill .top b { text-transform: capitalize; }
+.skill .top span { color: var(--mut); font-size: 11px; }
+.skill p { color: var(--mut); font-size: 12px; margin-top: 2px; line-height: 1.5; }
+
+footer { text-align: center; color: var(--mut); font-size: 12px; padding: 30px 0; }
+
+/* botão discreto de login de equipe */
+.admin-dot {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 50%; border: none;
+  background: transparent; color: var(--mut); opacity: 0.35; cursor: pointer;
+  vertical-align: -3px; margin-left: 4px;
+}
+.admin-dot:hover { opacity: 1; color: var(--sphere); }
+
+/* modais (login, adicionar breeding/skill) */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 100;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.modal {
+  background: var(--card); border: 2px solid var(--border); border-radius: 18px;
+  padding: 20px; width: 100%; max-width: 340px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.modal-head { display: flex; align-items: center; justify-content: space-between; font-weight: 700; margin-bottom: 4px; }
+.modal-close { background: none; border: none; color: var(--mut); cursor: pointer; display: flex; }
+.modal-close:hover { color: var(--txt); }
+.modal input, .modal select {
+  background: var(--bg); border: 2px solid var(--border); color: var(--txt);
+  padding: 9px 12px; border-radius: 10px; font-size: 14px; outline: none; width: 100%;
+}
+.modal input:focus, .modal select:focus { border-color: var(--sphere); }
+.modal-erro { color: #e5623b; font-size: 12px; }
+.modal-submit {
+  background: var(--sphere); color: #fff; border: none; border-radius: 10px;
+  padding: 10px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 4px;
+}
+.modal-submit:hover { background: var(--sphere-dark); }
+.modal-submit:disabled { opacity: 0.6; cursor: default; }
+
+/* botão "+" de adicionar (breeding/skill) nos headers de seção */
+.add-btn {
+  margin-left: auto; width: 22px; height: 22px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--card2); color: var(--mut);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.add-btn:hover { border-color: var(--sphere); color: var(--sphere); }
+
+/* seletor de pal (pai/mãe) nos modais */
+.pal-picker { position: relative; }
+.pal-picker-label { font-size: 12px; color: var(--mut); display: block; margin-bottom: 4px; }
+.pal-picker-btn {
+  width: 100%; text-align: left; background: var(--bg); border: 2px solid var(--border);
+  color: var(--txt); padding: 9px 12px; border-radius: 10px; font-size: 14px; cursor: pointer;
+}
+.pal-picker-btn:hover { border-color: var(--sphere); }
+.pal-picker-panel {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 110;
+  background: var(--card); border: 2px solid var(--border); border-radius: 12px; padding: 8px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.3);
+}
+.pal-picker-list { max-height: 200px; overflow-y: auto; margin-top: 6px; display: flex; flex-direction: column; gap: 2px; }
+.pal-picker-item {
+  display: flex; align-items: center; gap: 8px; background: none; border: none; color: var(--txt);
+  padding: 6px 8px; border-radius: 8px; font-size: 13px; cursor: pointer; text-align: left;
+}
+.pal-picker-item:hover { background: var(--card2); }
+.pal-picker-item img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+
+@media (max-width: 600px) {
+  .deck { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 12px; }
+  .pal-sphere { width: 88px; height: 88px; }
+  .pal-sphere img { width: 70px; height: 70px; }
+  .pal-hero { padding: 18px; }
+}
