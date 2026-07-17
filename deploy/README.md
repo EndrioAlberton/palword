@@ -15,7 +15,7 @@ source venv/bin/activate
 pip install -r api/requirements.txt
 
 cp api/.env.example api/.env
-nano api/.env   # ajustar SECRET_KEY, DB_*, ALLOWED_HOSTS=endrioalberton.com.br
+nano api/.env   # ajustar SECRET_KEY, DB_*, ALLOWED_HOSTS=palword.endrioalberton.com.br
 
 python api/manage.py migrate
 python api/manage.py collectstatic --noinput
@@ -39,7 +39,7 @@ sudo ln -s /etc/nginx/sites-available/paldeck /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
 
 # HTTPS
-sudo certbot --nginx -d endrioalberton.com.br -d www.endrioalberton.com.br
+sudo certbot --nginx -d palword.endrioalberton.com.br
 ```
 
 ## Verificar / operar

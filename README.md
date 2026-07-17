@@ -192,7 +192,7 @@ Sem OAuth nem tokens que expiram — integração bem mais simples que a do ML n
 
 Mesmo pipeline do whey (GitHub Actions em push na `main`), mas em **portas separadas** pra não colidir
 com o whey (que já ocupa 8000/3000 nesse EC2): gunicorn em **8001**, Next.js/pm2 (processo `paldeck-next`) em **3001**.
-Domínio: `endrioalberton.com.br`.
+Domínio: `palword.endrioalberton.com.br`.
 
 1. `git pull`
 2. `cd site && npm install && npm run build && pm2 restart paldeck-next`
