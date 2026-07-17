@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 
-export default function FilterDropdown({ label, options, selected, onChange, colorMap }) {
+export default function FilterDropdown({ label, options, selected, onChange, colorMap, labelMap }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
 
@@ -35,7 +35,7 @@ export default function FilterDropdown({ label, options, selected, onChange, col
             <label key={opt} className="fdrop-item">
               <input type="checkbox" checked={selected.includes(opt)} onChange={() => toggle(opt)} />
               {colorMap && <span className="dot" style={{ background: colorMap[opt] || 'var(--t-neutral)' }} />}
-              <span>{opt.replace(/_/g, ' ')}</span>
+              <span>{labelMap ? (labelMap[opt] ?? opt) : opt.replace(/_/g, ' ')}</span>
             </label>
           ))}
           {!options.length && <div className="fdrop-empty">Nenhuma opção</div>}

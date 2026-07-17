@@ -23,7 +23,7 @@ class BreedingInline(admin.TabularInline):
 
 @admin.register(Pal)
 class PalAdmin(admin.ModelAdmin):
-    list_display = ('key', 'imagem_thumb', 'nome', 'tipos_display', 'breeding_rank', 'descoberto', 'descoberto_em')
+    list_display = ('key', 'imagem_thumb', 'nome', 'tipos_display', 'tamanho', 'descoberto', 'descoberto_em')
     list_filter = ('descoberto', 'tipos')
     search_fields = ('key', 'nome')
     ordering = ('paldeck_id', 'key')
@@ -33,11 +33,15 @@ class PalAdmin(admin.ModelAdmin):
     change_list_template = 'admin/paldeck/pal/change_list.html'
 
     fieldsets = (
-        ('Pal', {'fields': ('paldeck_id', 'key', 'nome', 'descricao', 'imagem', 'tipos', 'genus', 'raridade')}),
+        ('Pal', {'fields': ('paldeck_id', 'key', 'nome', 'descricao', 'imagem', 'tipos', 'genus', 'raridade', 'tamanho')}),
         ('Descoberta', {'fields': ('descoberto', 'descoberto_em')}),
+        ('Habilidade de parceiro', {
+            'classes': ('collapse',),
+            'fields': ('passiva', 'passiva_descricao', 'equipamento'),
+        }),
         ('Dados do jogo (importados)', {
             'classes': ('collapse',),
-            'fields': ('breeding_rank', 'stats', 'skills', 'suitability', 'drops'),
+            'fields': ('stats', 'suitability', 'drops', 'taxa_fome', 'noturno', 'preco_venda'),
         }),
         ('Metadados', {'fields': ('atualizado_em',)}),
     )
@@ -53,12 +57,12 @@ class PalAdmin(admin.ModelAdmin):
     def importar_view(self, request):
         from paldeck.management.commands.importar_pals import importar_pals
         try:
-            criados, atualizados, erros_imagem = importar_pals()
+            criados, _, erros_imagem = importar_pals()
         except Exception as exc:
             self.message_user(request, f'Falha na importação: {exc}', messages.ERROR)
             return redirect('../')
         nivel = messages.SUCCESS if not erros_imagem else messages.WARNING
-        self.message_user(request, f'{criados} pals criados, {atualizados} atualizados, {erros_imagem} imagens falharam.', nivel)
+        self.message_user(request, f'{criados} pals importados, {erros_imagem} imagens falharam.', nivel)
         return redirect('../')
 
     def marcar_descoberto_view(self, request):

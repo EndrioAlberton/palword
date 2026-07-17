@@ -1,4 +1,4 @@
-import json
+import re
 from pathlib import Path
 
 import requests
@@ -7,44 +7,149 @@ from django.core.management.base import BaseCommand, CommandError
 
 from paldeck.models import Pal, Tipo
 
+CARGO_API = 'https://palworld.wiki.gg/api.php'
+IMAGE_BASE = 'https://palworld.wiki.gg/wiki/Special:FilePath'
 
-def importar_pals(baixar_imagens=True, arquivo=None, stdout=None):
-    """Importa/atualiza os pals a partir do JSON do palworld-paldex-api.
 
-    Idempotente: pode rodar de novo para atualizar dados sem perder
-    `descoberto` nem os breedings cadastrados.
-    Retorna (criados, atualizados, erros_imagem).
-    """
-    if arquivo:
-        dados = json.loads(Path(arquivo).read_text(encoding='utf-8'))
-    else:
-        resp = requests.get(settings.PALDEX_JSON_URL, timeout=30)
+def _cargoquery(tables, fields, where=None, limit=500):
+    """Busca todas as linhas de uma tabela Cargo da wiki, paginando por offset."""
+    linhas = []
+    offset = 0
+    while True:
+        params = {
+            'action': 'cargoquery',
+            'format': 'json',
+            'tables': tables,
+            'fields': fields,
+            'limit': limit,
+            'offset': offset,
+        }
+        if where:
+            params['where'] = where
+        resp = requests.get(CARGO_API, params=params, timeout=30)
         resp.raise_for_status()
-        dados = resp.json()
+        pagina = resp.json().get('cargoquery', [])
+        linhas.extend(item['title'] for item in pagina)
+        if len(pagina) < limit:
+            break
+        offset += limit
+    return linhas
+
+
+def _traduzir_lote(textos, cache):
+    """Traduz uma lista de textos en->pt em lote, preenchendo o cache. Falha graciosamente."""
+    unicos = sorted({t for t in textos if t and t not in cache})
+    if not unicos:
+        return
+    from deep_translator import GoogleTranslator
+    TAMANHO_LOTE = 50
+    for i in range(0, len(unicos), TAMANHO_LOTE):
+        pedaco = unicos[i:i + TAMANHO_LOTE]
+        try:
+            traduzidos = GoogleTranslator(source='en', target='pt').translate_batch(pedaco)
+        except Exception:
+            traduzidos = pedaco  # falhou a tradução, mantém original em inglês
+        for original, traduzido in zip(pedaco, traduzidos):
+            cache[original] = traduzido or original
+
+
+def importar_pals(baixar_imagens=True, stdout=None):
+    """Importa os pals a partir das tabelas Cargo da palworld.wiki.gg.
+
+    Substitui completamente os pals existentes (a numeração do Paldeck da wiki
+    diverge da fonte antiga, então não dá pra casar por `key` com segurança).
+    """
+    pais = _cargoquery('Pal', 'palName,paldeckNumber,palSize,partnerSkill,palGear,hungerRate,isNocturnal,sellPrice')
+    elementos = _cargoquery('PalElement', 'palName,element')
+    trabalhos = _cargoquery('PalWorkSuitability', 'palName,workType,level')
+    stats = _cargoquery('PalStat', 'palName,palVariant,baseHp,baseAttack,baseDefense,baseWorkSpeed,stamina,walkSpeed,runSpeed,rideSprintSpeed,captureRate', where="palVariant='Normal'")
+    parceiro = _cargoquery('PalPartnerSkill', 'palName,partnerSkill,description,type')
+    drops = _cargoquery('DropDefeat', 'targetName,itemName')
+
+    por_pal = {}
+    for p in pais:
+        por_pal[p['palName']] = {'pal': p, 'elementos': [], 'trabalhos': [], 'drops': set()}
+
+    for e in elementos:
+        if e['palName'] in por_pal:
+            por_pal[e['palName']]['elementos'].append(e['element'])
+
+    for t in trabalhos:
+        if t['palName'] in por_pal:
+            por_pal[t['palName']]['trabalhos'].append({'type': t['workType'].lower(), 'level': int(t['level'] or 0)})
+
+    stats_por_pal = {s['palName']: s for s in stats}
+
+    parceiro_por_pal = {p['palName']: p for p in parceiro}
+
+    for d in drops:
+        if d['targetName'] in por_pal and d.get('itemName'):
+            por_pal[d['targetName']]['drops'].add(d['itemName'])
+
+    # traduz tudo em lote antes de montar os registros (evita chamada por pal)
+    cache_traducao = {}
+    textos_para_traduzir = []
+    for nome, dados in por_pal.items():
+        textos_para_traduzir.extend(dados['drops'])
+        ps = parceiro_por_pal.get(nome)
+        if ps:
+            textos_para_traduzir.append(ps.get('partnerSkill', ''))
+            textos_para_traduzir.append(ps.get('description', ''))
+        gear = dados['pal'].get('palGear')
+        if gear:
+            textos_para_traduzir.append(gear)
+    _traduzir_lote(textos_para_traduzir, cache_traducao)
+
+    def traduzido(texto):
+        return cache_traducao.get(texto, texto) if texto else texto
 
     pasta_imagens = Path(settings.MEDIA_ROOT) / 'pals'
     pasta_imagens.mkdir(parents=True, exist_ok=True)
 
-    criados = atualizados = erros_imagem = 0
-    for item in dados:
-        key = item['key']
+    Pal.objects.all().delete()
+    Tipo.objects.all().delete()
+
+    criados = erros_imagem = 0
+    for nome, dados in por_pal.items():
+        p = dados['pal']
+        key = p['paldeckNumber']
+        digitos = re.sub(r'\D', '', key)
+        if not digitos:
+            continue
+
+        st = stats_por_pal.get(nome, {})
+        ps = parceiro_por_pal.get(nome)
+
         defaults = {
-            'paldeck_id': item['id'],
-            'nome': item['name'],
-            'descricao': item.get('description', ''),
-            'stats': item.get('stats', {}),
-            'skills': item.get('skills', []),
-            'suitability': item.get('suitability', []),
-            'drops': item.get('drops', []),
-            'breeding_rank': (item.get('breeding') or {}).get('rank'),
-            'raridade': item.get('rarity'),
-            'genus': item.get('genus', '') or '',
+            'paldeck_id': int(digitos),
+            'nome': nome,
+            'tamanho': p.get('palSize', ''),
+            'passiva': traduzido(ps['partnerSkill']) if ps else '',
+            'passiva_descricao': traduzido(ps['description']) if ps else '',
+            'equipamento': traduzido(p.get('palGear', '')),
+            'taxa_fome': int(p['hungerRate']) if p.get('hungerRate') else None,
+            'noturno': p.get('isNocturnal') == '1',
+            'preco_venda': int(p['sellPrice']) if p.get('sellPrice') else None,
+            'suitability': dados['trabalhos'],
+            'drops': sorted(traduzido(d) for d in dados['drops']),
+            'stats': {
+                'hp': float(st['baseHp']) if st.get('baseHp') else None,
+                'attack': float(st['baseAttack']) if st.get('baseAttack') else None,
+                'defense': float(st['baseDefense']) if st.get('baseDefense') else None,
+                'work_speed': float(st['baseWorkSpeed']) if st.get('baseWorkSpeed') else None,
+                'stamina': float(st['stamina']) if st.get('stamina') else None,
+                'walk_speed': float(st['walkSpeed']) if st.get('walkSpeed') else None,
+                'run_speed': float(st['runSpeed']) if st.get('runSpeed') else None,
+                'ride_sprint_speed': float(st['rideSprintSpeed']) if st.get('rideSprintSpeed') else None,
+                'capture_rate': float(st['captureRate']) if st.get('captureRate') else None,
+            },
         }
 
         destino = pasta_imagens / f'{key}.png'
-        if baixar_imagens and not destino.exists():
+        if baixar_imagens:
             try:
-                img = requests.get(f'{settings.PALDEX_IMAGES_URL}/{key}.png', timeout=30)
+                nome_arquivo = nome.replace(' ', '_')
+                img = requests.get(f'{IMAGE_BASE}/{nome_arquivo}_icon.png', timeout=30)
                 img.raise_for_status()
                 destino.write_bytes(img.content)
             except requests.RequestException:
@@ -52,36 +157,33 @@ def importar_pals(baixar_imagens=True, arquivo=None, stdout=None):
         if destino.exists():
             defaults['imagem'] = f'pals/{key}.png'
 
-        pal, criado = Pal.objects.update_or_create(key=key, defaults=defaults)
-        tipos = [Tipo.objects.get_or_create(nome=t['name'])[0] for t in item.get('types', [])]
+        pal = Pal.objects.create(key=key, **defaults)
+        tipos = [Tipo.objects.get_or_create(nome=el.lower())[0] for el in dados['elementos']]
         pal.tipos.set(tipos)
 
-        criados += criado
-        atualizados += not criado
+        criados += 1
         if stdout:
-            stdout.write(f'{"+" if criado else "~"} #{key} {pal.nome}')
+            stdout.write(f'+ #{key} {nome}')
 
-    return criados, atualizados, erros_imagem
+    return criados, 0, erros_imagem
 
 
 class Command(BaseCommand):
-    help = 'Importa/atualiza os pals a partir do palworld-paldex-api (JSON + imagens)'
+    help = 'Substitui os pals pelos dados atuais da palworld.wiki.gg (Cargo API)'
 
     def add_arguments(self, parser):
         parser.add_argument('--sem-imagens', action='store_true', help='Não baixa as imagens')
-        parser.add_argument('--arquivo', help='Caminho de um pals.json local em vez de baixar da URL')
 
     def handle(self, *args, **options):
         try:
             criados, atualizados, erros_imagem = importar_pals(
                 baixar_imagens=not options['sem_imagens'],
-                arquivo=options.get('arquivo'),
                 stdout=self.stdout,
             )
         except requests.RequestException as exc:
             raise CommandError(f'Falha ao baixar dados: {exc}')
 
-        msg = f'{criados} pals criados, {atualizados} atualizados'
+        msg = f'{criados} pals importados'
         if erros_imagem:
             msg += f', {erros_imagem} imagens falharam'
         self.stdout.write(self.style.SUCCESS(msg))

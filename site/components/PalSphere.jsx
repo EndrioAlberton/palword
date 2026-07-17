@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { TIPOS_PT } from '../lib/traducoes'
 
 export const CORES_TIPO = {
   neutral: 'var(--t-neutral)',
@@ -22,7 +23,7 @@ export default function PalSphere({ pal }) {
       <div className="nome">{pal.descoberto ? pal.nome : '???'}</div>
       <div className="tipos">
         {pal.descoberto && (pal.tipos || []).map((t) => (
-          <span key={t} className="dot" style={{ background: CORES_TIPO[t] || 'var(--t-neutral)' }} title={t} />
+          <span key={t} className="dot" style={{ background: CORES_TIPO[t] || 'var(--t-neutral)' }} title={TIPOS_PT[t] || t} />
         ))}
       </div>
     </>

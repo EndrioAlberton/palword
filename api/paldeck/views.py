@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from .models import Pal, Breeding
 from .serializers import (
     PalListSerializer, PalDetailSerializer,
-    BreedingCreateSerializer, SkillCreateSerializer,
+    BreedingCreateSerializer,
 )
 
 
@@ -59,17 +59,3 @@ class PalBreedingCreateView(APIView):
             {'id': breeding.id, 'pai': breeding.pai.key, 'mae': breeding.mae.key},
             status=status.HTTP_201_CREATED,
         )
-
-
-class PalSkillCreateView(APIView):
-    permission_classes = [IsAdminUser]
-
-    def post(self, request, key):
-        pal = get_object_or_404(Pal, key=key)
-        serializer = SkillCreateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        skills = pal.skills or []
-        skills.append(serializer.validated_data)
-        pal.skills = skills
-        pal.save(update_fields=['skills', 'atualizado_em'])
-        return Response(serializer.validated_data, status=status.HTTP_201_CREATED)

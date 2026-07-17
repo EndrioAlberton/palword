@@ -20,12 +20,18 @@ class Pal(models.Model):
     tipos = models.ManyToManyField(Tipo, blank=True)
 
     stats = models.JSONField(default=dict, blank=True)
-    skills = models.JSONField(default=list, blank=True)
     suitability = models.JSONField(default=list, blank=True)
     drops = models.JSONField(default=list, blank=True)
-    breeding_rank = models.PositiveIntegerField(null=True, blank=True)
     raridade = models.PositiveIntegerField(null=True, blank=True)
     genus = models.CharField(max_length=50, blank=True)
+
+    tamanho = models.CharField(max_length=20, blank=True)  # Extra Small, Small, Medium, Large, Extra Large
+    passiva = models.CharField(max_length=100, blank=True)  # nome da habilidade de parceiro (traduzido)
+    passiva_descricao = models.TextField(blank=True)  # traduzido
+    equipamento = models.CharField(max_length=100, blank=True)  # pal gear (traduzido)
+    taxa_fome = models.PositiveIntegerField(null=True, blank=True)
+    noturno = models.BooleanField(default=False)
+    preco_venda = models.PositiveIntegerField(null=True, blank=True)
 
     descoberto = models.BooleanField(default=False)
     descoberto_em = models.DateTimeField(null=True, blank=True)

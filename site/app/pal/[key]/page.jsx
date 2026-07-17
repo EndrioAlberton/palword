@@ -1,10 +1,10 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Swords, Egg, Hammer, Package } from 'lucide-react'
+import { ArrowLeft, Swords, Egg, Hammer, Package, Sparkles } from 'lucide-react'
 import { getPal } from '../../../lib/api'
 import { CORES_TIPO } from '../../../components/PalSphere'
 import AddBreedingButton from '../../../components/AddBreedingButton'
-import AddSkillButton from '../../../components/AddSkillButton'
+import { TIPOS_PT, TRABALHOS_PT, TAMANHOS_PT } from '../../../lib/traducoes'
 
 export async function generateMetadata({ params }) {
   const pal = await getPal(params.key)
@@ -17,16 +17,10 @@ export async function generateMetadata({ params }) {
 
 const STATS = [
   { chave: 'hp', rotulo: 'HP', max: 150 },
-  { chave: 'melee', rotulo: 'Ataque corpo', max: 150 },
-  { chave: 'ranged', rotulo: 'Ataque dist.', max: 150 },
+  { chave: 'attack', rotulo: 'Ataque', max: 150 },
   { chave: 'defense', rotulo: 'Defesa', max: 150 },
   { chave: 'stamina', rotulo: 'Stamina', max: 150 },
 ]
-
-function valorStat(stats, chave) {
-  if (chave === 'melee' || chave === 'ranged') return stats?.attack?.[chave]
-  return stats?.[chave]
-}
 
 function legivel(s) {
   return (s || '').replaceAll('_', ' ')
@@ -48,14 +42,25 @@ export default async function PalPage({ params }) {
           <span className="num">#{pal.key}</span>
         </div>
         <div>
-          <div className="key">Paldeck Nº {pal.key}{pal.genus ? ` · ${legivel(pal.genus)}` : ''}</div>
+          <div className="key">
+            Paldeck Nº {pal.key}
+            {pal.genus ? ` · ${legivel(pal.genus)}` : ''}
+            {pal.tamanho ? ` · ${TAMANHOS_PT[pal.tamanho] || pal.tamanho}` : ''}
+            {pal.noturno ? ' · Noturno' : ''}
+          </div>
           <h1>{pal.nome}</h1>
           <div style={{ marginTop: 8 }}>
             {(pal.tipos || []).map((t) => (
-              <span key={t} className="type-pill" style={{ '--tcolor': CORES_TIPO[t] || 'var(--t-neutral)' }}>{t}</span>
+              <span key={t} className="type-pill" style={{ '--tcolor': CORES_TIPO[t] || 'var(--t-neutral)' }}>{TIPOS_PT[t] || t}</span>
             ))}
           </div>
           {pal.descricao && <p className="desc">{pal.descricao}</p>}
+          {(pal.preco_venda != null || pal.taxa_fome != null) && (
+            <p className="desc" style={{ marginTop: 6 }}>
+              {pal.preco_venda != null && <>Preço de venda: <b>{pal.preco_venda}</b>{pal.taxa_fome != null ? '  ·  ' : ''}</>}
+              {pal.taxa_fome != null && <>Taxa de fome: <b>{pal.taxa_fome}</b></>}
+            </p>
+          )}
         </div>
       </div>
 
@@ -83,7 +88,7 @@ export default async function PalPage({ params }) {
       <div className="section">
         <h2><Swords size={16} color="var(--sphere)" /> Stats</h2>
         {STATS.map(({ chave, rotulo, max }) => {
-          const v = valorStat(stats, chave)
+          const v = stats?.[chave]
           if (v == null) return null
           return (
             <div key={chave} className="stat-row">
@@ -95,12 +100,21 @@ export default async function PalPage({ params }) {
         })}
       </div>
 
+      {(pal.passiva || pal.equipamento) && (
+        <div className="section">
+          <h2><Sparkles size={16} color="var(--sphere)" /> Habilidade de parceiro</h2>
+          {pal.passiva && <p style={{ fontWeight: 700, marginBottom: 4 }}>{pal.passiva}</p>}
+          {pal.passiva_descricao && <p style={{ color: 'var(--mut)', fontSize: 13, lineHeight: 1.5 }}>{pal.passiva_descricao}</p>}
+          {pal.equipamento && <p style={{ color: 'var(--mut)', fontSize: 13, marginTop: 6 }}>Equipamento: <b>{pal.equipamento}</b></p>}
+        </div>
+      )}
+
       {!!pal.suitability?.length && (
         <div className="section">
           <h2><Hammer size={16} color="var(--sphere)" /> Trabalhos de base</h2>
           <div className="chips">
             {pal.suitability.map((s) => (
-              <span key={s.type} className="chip">{legivel(s.type)} <b>Lv {s.level}</b></span>
+              <span key={s.type} className="chip">{TRABALHOS_PT[s.type] || legivel(s.type)} <b>Lv {s.level}</b></span>
             ))}
           </div>
         </div>
@@ -114,24 +128,6 @@ export default async function PalPage({ params }) {
           </div>
         </div>
       )}
-
-      <div className="section">
-        <h2>
-          <Swords size={16} color="var(--sphere)" /> Skills
-          <AddSkillButton palKey={pal.key} />
-        </h2>
-        {pal.skills?.length ? pal.skills.map((s) => (
-          <div key={s.name} className="skill" style={{ '--tcolor': CORES_TIPO[s.type] || 'var(--t-neutral)' }}>
-            <div className="top">
-              <b>{legivel(s.name)}</b>
-              <span>Lv {s.level} · poder {s.power} · cooldown {s.cooldown}s</span>
-            </div>
-            {s.description && <p>{s.description}</p>}
-          </div>
-        )) : (
-          <p style={{ color: 'var(--mut)', fontSize: 13 }}>Nenhuma skill registrada ainda.</p>
-        )}
-      </div>
     </main>
   )
 }

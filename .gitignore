@@ -9,3 +9,5 @@ api/staticfiles/
 node_modules/
 .next/
 site/.env.local
+
+.claude/

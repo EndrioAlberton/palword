@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { Search } from 'lucide-react'
 import PalSphere, { CORES_TIPO } from './PalSphere'
 import FilterDropdown from './FilterDropdown'
+import { TIPOS_PT, TRABALHOS_PT } from '../lib/traducoes'
 
 export default function DeckClient({ pals }) {
   const [busca, setBusca] = useState('')
@@ -47,8 +48,8 @@ export default function DeckClient({ pals }) {
           onChange={(e) => setBusca(e.target.value)}
         />
 
-        <FilterDropdown label="Tipo" options={tipos} selected={fTipos} onChange={setFTipos} colorMap={CORES_TIPO} />
-        <FilterDropdown label="Trabalho" options={trabalhos} selected={fTrabalhos} onChange={setFTrabalhos} />
+        <FilterDropdown label="Tipo" options={tipos} selected={fTipos} onChange={setFTipos} colorMap={CORES_TIPO} labelMap={TIPOS_PT} />
+        <FilterDropdown label="Trabalho" options={trabalhos} selected={fTrabalhos} onChange={setFTrabalhos} labelMap={TRABALHOS_PT} />
 
         <label className={`nivel-range${fTrabalhos.length ? '' : ' off'}`}>
           Nível mín. <b>{nivelMin}</b>

@@ -31,7 +31,7 @@ class PalListSerializer(PalMiniSerializer):
     tipos = serializers.SlugRelatedField(slug_field='nome', many=True, read_only=True)
 
     class Meta(PalMiniSerializer.Meta):
-        fields = PalMiniSerializer.Meta.fields + ['tipos', 'raridade', 'breeding_rank', 'suitability']
+        fields = PalMiniSerializer.Meta.fields + ['tipos', 'raridade', 'suitability']
 
 
 class PalDetailSerializer(PalListSerializer):
@@ -39,7 +39,9 @@ class PalDetailSerializer(PalListSerializer):
 
     class Meta(PalListSerializer.Meta):
         fields = PalListSerializer.Meta.fields + [
-            'descricao', 'genus', 'stats', 'skills', 'suitability', 'drops',
+            'descricao', 'genus', 'stats', 'suitability', 'drops',
+            'tamanho', 'passiva', 'passiva_descricao', 'equipamento',
+            'taxa_fome', 'noturno', 'preco_venda',
             'nasce_de', 'descoberto_em', 'atualizado_em',
         ]
 
@@ -69,12 +71,3 @@ class BreedingCreateSerializer(serializers.ModelSerializer):
             pai=validated_data['pai'],
             mae=validated_data['mae'],
         )
-
-
-class SkillCreateSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=100)
-    type = serializers.CharField(max_length=30)
-    level = serializers.IntegerField(min_value=1, max_value=99)
-    power = serializers.IntegerField(min_value=0)
-    cooldown = serializers.IntegerField(min_value=0)
-    description = serializers.CharField(allow_blank=True, required=False, default='')
