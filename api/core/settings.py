@@ -12,6 +12,10 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
+# Atrás do nginx (que envia X-Forwarded-Proto), considera a requisição como https —
+# necessário pro build_absolute_uri das imagens gerar https:// e pro CSRF do admin passar.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

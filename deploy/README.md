@@ -29,6 +29,8 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now paldeck-api
 
 # Next.js via pm2 (porta 3001)
+# API_URL e NEXT_PUBLIC_API_URL vêm do site/.env.production (domínio público, via nginx).
+# NEXT_PUBLIC_* é embutida no bundle no `npm run build` — mudou a var, precisa rebuildar.
 cd site
 PORT=3001 pm2 start npm --name "paldeck-next" -- start
 pm2 save
