@@ -1,5 +1,6 @@
 import { getPals } from '../lib/api'
 import DeckClient from '../components/DeckClient'
+import DescobrirPal from '../components/DescobrirPal'
 import ThemeToggle from '../components/ThemeToggle'
 
 export const metadata = {
@@ -31,6 +32,8 @@ export default async function Home() {
           <div style={{ width: pals.length ? `${(descobertos / pals.length) * 100}%` : 0 }} />
         </div>
       </div>
+
+      <DescobrirPal />
 
       <DeckClient pals={pals} />
     </main>

@@ -1,6 +1,7 @@
 from django.contrib.auth import authenticate
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny, IsAdminUser
@@ -42,6 +43,24 @@ class LoginView(APIView):
             return Response({'detail': 'Usuário ou senha inválidos.'}, status=status.HTTP_401_UNAUTHORIZED)
         token, _ = Token.objects.get_or_create(user=user)
         return Response({'token': token.key, 'username': user.username})
+
+
+class PalDescobrirView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request):
+        busca = str(request.data.get('busca', '')).strip()
+        if not busca:
+            return Response({'detail': 'Informe o número do pal.'}, status=status.HTTP_400_BAD_REQUEST)
+        pal = Pal.buscar_por_id_ou_key(busca)
+        if not pal:
+            return Response({'detail': f'Nenhum pal encontrado com "{busca}".'}, status=status.HTTP_404_NOT_FOUND)
+        ja_descoberto = pal.descoberto
+        if not ja_descoberto:
+            pal.descoberto = True
+            pal.descoberto_em = timezone.now()
+            pal.save(update_fields=['descoberto', 'descoberto_em', 'atualizado_em'])
+        return Response({'key': pal.key, 'nome': pal.nome, 'ja_descoberto': ja_descoberto})
 
 
 class PalBreedingCreateView(APIView):

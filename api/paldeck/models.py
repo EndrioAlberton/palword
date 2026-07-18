@@ -41,6 +41,15 @@ class Pal(models.Model):
         ordering = ['paldeck_id', 'key']
         verbose_name_plural = 'pals'
 
+    @classmethod
+    def buscar_por_id_ou_key(cls, busca):
+        """Localiza um pal por key ("085", "085B") ou número sem zeros ("85", "1")."""
+        pal = cls.objects.filter(key__iexact=busca).first()
+        if not pal and busca.isdigit():
+            pal = cls.objects.filter(paldeck_id=int(busca), key=busca.zfill(3)).first() \
+                or cls.objects.filter(paldeck_id=int(busca)).first()
+        return pal
+
     def __str__(self):
         return f'#{self.key} {self.nome}'
 

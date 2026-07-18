@@ -85,6 +85,22 @@ header { display: flex; align-items: center; justify-content: space-between; mar
 .progress-bar { height: 10px; background: var(--bg); border-radius: 999px; overflow: hidden; }
 .progress-bar > div { height: 100%; background: linear-gradient(90deg, var(--sphere-dark), var(--sphere)); border-radius: 999px; }
 
+/* marcar descoberto (admin logado) */
+.descobrir { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 20px; }
+.descobrir input {
+  background: var(--card); border: 2px solid var(--border); color: var(--txt);
+  padding: 9px 14px; border-radius: 999px; font-size: 14px; min-width: 220px; outline: none;
+}
+.descobrir input:focus { border-color: var(--sphere); }
+.descobrir button {
+  background: var(--sphere); border: none; color: #fff; font-weight: 700;
+  padding: 10px 18px; border-radius: 999px; font-size: 13px; cursor: pointer;
+}
+.descobrir button:hover { background: var(--sphere-dark); }
+.descobrir button:disabled { opacity: 0.6; cursor: default; }
+.descobrir-ok { font-size: 13px; color: var(--sphere); font-weight: 600; }
+.descobrir-erro { font-size: 13px; color: #e5623b; }
+
 /* filtros */
 .filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 22px; }
 .filters input[type='text'] {

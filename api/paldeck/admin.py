@@ -69,10 +69,7 @@ class PalAdmin(admin.ModelAdmin):
         busca = (request.POST.get('busca') or '').strip()
         if request.method != 'POST' or not busca:
             return redirect('../')
-        pal = Pal.objects.filter(key__iexact=busca).first()
-        if not pal and busca.isdigit():
-            pal = Pal.objects.filter(paldeck_id=int(busca), key=busca.zfill(3)).first() \
-                or Pal.objects.filter(paldeck_id=int(busca)).first()
+        pal = Pal.buscar_por_id_ou_key(busca)
         if not pal:
             self.message_user(request, f'Nenhum pal encontrado com ID/key "{busca}".', messages.ERROR)
         elif pal.descoberto:

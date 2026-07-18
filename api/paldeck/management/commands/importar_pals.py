@@ -1,14 +1,23 @@
 import re
 from pathlib import Path
+from urllib.parse import quote
 
 import requests
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
-from paldeck.models import Pal, Tipo
+from paldeck.models import Pal, Tipo, Breeding
 
 CARGO_API = 'https://palworld.wiki.gg/api.php'
-IMAGE_BASE = 'https://palworld.wiki.gg/wiki/Special:FilePath'
+# URL direta dos arquivos (padrão File:<Nome>_icon.png) — Special:FilePath é bloqueado pelo Cloudflare (403)
+IMAGE_BASE = 'https://palworld.wiki.gg/images'
+
+# sem User-Agent de navegador o Cloudflare da wiki.gg pode bloquear as requisições
+SESSION = requests.Session()
+SESSION.headers['User-Agent'] = (
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+    '(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
+)
 
 
 def _cargoquery(tables, fields, where=None, limit=500):
@@ -26,7 +35,7 @@ def _cargoquery(tables, fields, where=None, limit=500):
         }
         if where:
             params['where'] = where
-        resp = requests.get(CARGO_API, params=params, timeout=30)
+        resp = SESSION.get(CARGO_API, params=params, timeout=30)
         resp.raise_for_status()
         pagina = resp.json().get('cargoquery', [])
         linhas.extend(item['title'] for item in pagina)
@@ -106,6 +115,10 @@ def importar_pals(baixar_imagens=True, stdout=None):
     pasta_imagens = Path(settings.MEDIA_ROOT) / 'pals'
     pasta_imagens.mkdir(parents=True, exist_ok=True)
 
+    # guarda descobertas e breedings pra restaurar depois do replace (casando por nome)
+    descobertos = dict(Pal.objects.filter(descoberto=True).values_list('nome', 'descoberto_em'))
+    breedings_salvos = list(Breeding.objects.values_list('filho__nome', 'pai__nome', 'mae__nome'))
+
     Pal.objects.all().delete()
     Tipo.objects.all().delete()
 
@@ -148,8 +161,8 @@ def importar_pals(baixar_imagens=True, stdout=None):
         destino = pasta_imagens / f'{key}.png'
         if baixar_imagens:
             try:
-                nome_arquivo = nome.replace(' ', '_')
-                img = requests.get(f'{IMAGE_BASE}/{nome_arquivo}_icon.png', timeout=30)
+                nome_arquivo = quote(nome.replace(' ', '_'))
+                img = SESSION.get(f'{IMAGE_BASE}/{nome_arquivo}_icon.png', timeout=30)
                 img.raise_for_status()
                 destino.write_bytes(img.content)
             except requests.RequestException:
@@ -164,6 +177,16 @@ def importar_pals(baixar_imagens=True, stdout=None):
         criados += 1
         if stdout:
             stdout.write(f'+ #{key} {nome}')
+
+    # restaura o que foi salvo antes do replace
+    for nome_pal, quando in descobertos.items():
+        Pal.objects.filter(nome=nome_pal).update(descoberto=True, descoberto_em=quando)
+    for filho_nome, pai_nome, mae_nome in breedings_salvos:
+        filho = Pal.objects.filter(nome=filho_nome).first()
+        pai = Pal.objects.filter(nome=pai_nome).first()
+        mae = Pal.objects.filter(nome=mae_nome).first()
+        if filho and pai and mae:
+            Breeding.objects.get_or_create(filho=filho, pai=pai, mae=mae)
 
     return criados, 0, erros_imagem
 
