@@ -31,7 +31,7 @@ class PalListSerializer(PalMiniSerializer):
     tipos = serializers.SlugRelatedField(slug_field='nome', many=True, read_only=True)
 
     class Meta(PalMiniSerializer.Meta):
-        fields = PalMiniSerializer.Meta.fields + ['tipos', 'raridade', 'suitability', 'passiva']
+        fields = PalMiniSerializer.Meta.fields + ['tipos', 'raridade', 'suitability', 'passiva', 'passiva_descricao']
 
 
 class PalDetailSerializer(PalListSerializer):
@@ -40,7 +40,7 @@ class PalDetailSerializer(PalListSerializer):
     class Meta(PalListSerializer.Meta):
         fields = PalListSerializer.Meta.fields + [
             'descricao', 'genus', 'stats', 'suitability', 'drops',
-            'tamanho', 'passiva', 'passiva_descricao', 'equipamento',
+            'tamanho', 'equipamento',
             'taxa_fome', 'noturno', 'preco_venda',
             'nasce_de', 'descoberto_em', 'atualizado_em',
         ]
