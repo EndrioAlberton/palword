@@ -32,7 +32,7 @@ export default function DeckClient({ pals }) {
       return (
         (!fTipos.length || (p.tipos || []).some((t) => fTipos.includes(t))) &&
         (!fTrabalhos.length || (p.suitability || []).some((s) => fTrabalhos.includes(s.type) && s.level >= nivelMin)) &&
-        (!b || p.nome.toLowerCase().includes(b) || p.key.toLowerCase().includes(b))
+        (!b || p.nome.toLowerCase().includes(b) || p.key.toLowerCase().includes(b) || (p.passiva || '').toLowerCase().includes(b))
       )
     })
   }, [pals, busca, fTipos, fTrabalhos, nivelMin, mostrarOcultos, filtrosAtivos])
@@ -43,7 +43,7 @@ export default function DeckClient({ pals }) {
         <Search size={18} color="var(--mut)" />
         <input
           type="text"
-          placeholder="Buscar por nome ou número..."
+          placeholder="Buscar por nome, número ou habilidade de parceiro..."
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
         />

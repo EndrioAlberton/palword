@@ -1,3 +1,5 @@
+import re
+
 from django.db import models
 
 
@@ -43,12 +45,22 @@ class Pal(models.Model):
 
     @classmethod
     def buscar_por_id_ou_key(cls, busca):
-        """Localiza um pal por key ("085", "085B") ou número sem zeros ("85", "1")."""
+        """Localiza um pal por key ("085", "085B") ou número sem zeros ("85", "1", "85b")."""
+        busca = busca.strip()
         pal = cls.objects.filter(key__iexact=busca).first()
-        if not pal and busca.isdigit():
-            pal = cls.objects.filter(paldeck_id=int(busca), key=busca.zfill(3)).first() \
-                or cls.objects.filter(paldeck_id=int(busca)).first()
-        return pal
+        if pal:
+            return pal
+
+        m = re.match(r'^(\d+)([A-Za-z]*)$', busca)
+        if not m:
+            return None
+        numero, sufixo = m.groups()
+
+        if sufixo:
+            return cls.objects.filter(key__iexact=f'{numero.zfill(3)}{sufixo}').first()
+
+        return cls.objects.filter(paldeck_id=int(numero), key=numero.zfill(3)).first() \
+            or cls.objects.filter(paldeck_id=int(numero)).first()
 
     def __str__(self):
         return f'#{self.key} {self.nome}'
